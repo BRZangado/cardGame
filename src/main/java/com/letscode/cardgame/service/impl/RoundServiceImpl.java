@@ -1,5 +1,6 @@
 package com.letscode.cardgame.service.impl;
 
+import com.letscode.cardgame.dto.RankingDTO;
 import com.letscode.cardgame.dto.RoundDTO;
 import com.letscode.cardgame.entity.Card;
 import com.letscode.cardgame.entity.Movie;
@@ -9,17 +10,19 @@ import com.letscode.cardgame.exception.EntityNotFoundException;
 import com.letscode.cardgame.exception.UnauthorizedException;
 import com.letscode.cardgame.repository.RoundRepository;
 import com.letscode.cardgame.service.CardService;
-import com.letscode.cardgame.service.MoviesService;
 import com.letscode.cardgame.service.PlayerService;
 import com.letscode.cardgame.service.RoundService;
 import lombok.SneakyThrows;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
 @Service
+@Slf4j
 public class RoundServiceImpl implements RoundService {
 
     @Autowired
@@ -33,6 +36,7 @@ public class RoundServiceImpl implements RoundService {
 
     @Override
     public RoundDTO startGame(String playerName) {
+        log.info("Starting new game for player " + playerName);
         Player player = playerService.getPlayer(playerName);
 
         Round round = Round.builder()
@@ -56,6 +60,9 @@ public class RoundServiceImpl implements RoundService {
     @SneakyThrows
     @Override
     public RoundDTO finishGame(Long roundId, String playerName) {
+
+        log.info("Finishing game " + roundId);
+
         Player player = playerService.getPlayer(playerName);
         Round round = getRound(roundId);
 
@@ -81,6 +88,7 @@ public class RoundServiceImpl implements RoundService {
     @SneakyThrows
     @Override
     public RoundDTO play(Long roundId, Long movieId, String playerName) {
+        log.info("Player made a move for round " + roundId);
         Player player = playerService.getPlayer(playerName);
         Round round = getRound(roundId);
 
@@ -91,6 +99,7 @@ public class RoundServiceImpl implements RoundService {
         String roundMessage = "";
         if(round.isFinished()) return finishRound(roundId);
         if(round.getRetries() == 3){
+            log.info("Player already tried 3 times.. generating new card for round " + roundId);
             //Pegando novo card
             List<Card> cards = updateCardsAndGetRemaining(round);
 
@@ -108,6 +117,7 @@ public class RoundServiceImpl implements RoundService {
                     : card.getMovieB();
 
             if(winningMovie.getId().equals(movieId)){
+                log.info("Player Scored for round " + roundId);
                 round.addScore();
                 List<Card> cards = updateCardsAndGetRemaining(round);
                 if(cards.isEmpty()) return finishRound(roundId);
@@ -116,6 +126,7 @@ public class RoundServiceImpl implements RoundService {
                 roundRepository.save(round);
                 roundMessage = "ACERTOU!!! PARABÉNS! Gerando novo card";
             } else{
+                log.info("Player did not scored for round " + roundId);
                 round.addRetry();
                 roundRepository.save(round);
                 roundMessage = "EERROU!!! tente novamente...";
@@ -131,6 +142,22 @@ public class RoundServiceImpl implements RoundService {
                         + " id: " + round.getCurrentCard().getMovieB().getId())
                 .roundMessage(roundMessage)
                 .build();
+    }
+
+    @Override
+    public List<RankingDTO> getRanking() {
+        log.info("Getting rounds rank...");
+        List<Round> filteredRounds = roundRepository.filterRoundsByScore();
+        List<RankingDTO> rankingDTOS = new ArrayList<>();
+        filteredRounds.forEach(round -> {
+            RankingDTO rankingDTO =  RankingDTO.builder()
+                    .round(round.getId())
+                    .player(round.getPlayer().getUsername())
+                    .totalPoints(round.getPlayerScore())
+                    .build();
+            rankingDTOS.add(rankingDTO);
+        });
+        return rankingDTOS;
     }
 
     @SneakyThrows
