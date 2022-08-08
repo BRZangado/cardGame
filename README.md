@@ -27,7 +27,7 @@ para jogar uma rodada<br>
 POST /api/v1/round/play?roundId={X}&movieId={Y}<br>
 deverá ser informado o id da rodada e o id do filme escolhido<br><br>
 o jogador tem 3 chances de acertar qual filme que possui maior pontuação<br><br>
-caso acerte qual filme tem maior pontuação, receberá um mensagem de acerto e somará masi um ponto na partida<br><br>
+caso acerte qual filme tem maior pontuação, receberá um mensagem de acerto e somará mais um ponto na partida<br><br>
 Caso não exista novos filmes a serem jogados, a partida se encerrará automaticamente
 
 ### *Encerrando uma partida* ###
