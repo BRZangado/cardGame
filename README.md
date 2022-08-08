@@ -1,5 +1,5 @@
 # API DE CARD GAME
-
+*Ao subir a aplicação, será feito uma busca na omdbapi pra popular o banco com alguns filmes para teste. Aguarde a mensagem de "jogo liberado" nos logs da aplicação para começar a jogar.*<br><br>
 como usar: <br>
 Dois usuários foram criados inicialmente para poder rodar todo o fluxo da api <br>
 
